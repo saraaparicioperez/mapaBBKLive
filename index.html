@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mapa interactivo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background:#fafafa; }
+    h1 { max-width: 980px; margin: 0 auto 14px; }
+
+    .toolbar{
+      max-width: 520px;
+      margin: 0 auto 10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      background:#fff;
+      border:1px solid #eee;
+      border-radius:12px;
+      padding:10px 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.05);
+      font-size: 14px;
+    }
+    .toolbar .left{ display:flex; gap:10px; align-items:center; }
+    .toggle{ display:flex; align-items:center; gap:8px; user-select:none; }
+    .toggle input{ width: 18px; height: 18px; }
+
+    .pill{
+      padding:6px 10px;
+      border-radius:999px;
+      background:#111;
+      color:#fff;
+      font-size:12px;
+      white-space: nowrap;
+    }
+    .btn{
+      border:0; background:#eee; padding:8px 10px; border-radius:10px; cursor:pointer;
+    }
+
+    .map-wrap{
+      position: relative;
+      max-width: 520px;
+      margin: 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      background:#fff;
+      border:1px solid #eee;
+    }
+    .map-wrap img{ width: 100%; height: auto; display: block; }
+
+    /* 🔴 Puntos rojos */
+    .dot{
+      position:absolute;
+      transform: translate(-50%, -50%);
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background: #e11d48; /* rojo */
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    }
+    .dot:hover{ transform: translate(-50%, -50%) scale(1.08); }
+    .dot:focus{ outline: 3px solid rgba(255,255,255,.75); }
+
+    .help{
+      max-width: 520px;
+      margin: 10px auto 0;
+      color:#555;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    code{ background:#fff; border:1px solid #eee; padding:2px 6px; border-radius:8px; }
+
+    /* Modal */
+    .modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,.55);
+      padding: 18px;
+      z-index: 9999;
+    }
+    .modal.open{ display: grid; }
+    .modal-card{
+      width: min(560px, 100%);
+      background: white;
+      border-radius: 14px;
+      padding: 16px 16px 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .modal-header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom: 8px;
+    }
+    .modal-title{ margin:0; font-size: 18px; }
+    .meta{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid #f0f0f0;
+      color:#666;
+      font-size: 13px;
+    }
+
+    h1{
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Mapa interactivo</h1>
+
+
+
+  <div class="map-wrap" id="mapWrap">
+    <img src="mapa.png" alt="Mapa" id="mapImg" />
+
+    <!-- 🔴 PUNTOS AL LADO DE LOS NOMBRES (ajustables) -->
+
+    <!-- Loop Stage -->
+    <button class="dot" style="left: 20.70%; top: 14.39%;" data-id="loop_stage" aria-label="Loop Stage"></button>
+
+    <!-- Escenario Principal -->
+    <button class="dot" style="left: 74.80%; top: 20.05%;" data-id="escenario_principal" aria-label="Escenario Principal"></button>
+
+    <!-- Basoa Stage -->
+    <button class="dot" style="left: 55.47%; top: 30.37%;" data-id="basoa_stage" aria-label="Basoa Stage"></button>
+
+    <!-- ENTRADA (la grande de arriba/centro izquierda) -->
+    <button class="dot" style="left: 25.10%; top: 51.40%;" data-id="entrada_1" aria-label="Entrada 1"></button>
+
+    <!-- Zona Saturada -->
+    <button class="dot" style="left: 76.27%; top: 51.63%;" data-id="zona_saturada" aria-label="Zona Saturada"></button>
+
+    <!-- Restaurante (el del centro) -->
+    <button class="dot" style="left: 43.55%; top: 61.91%;" data-id="restaurante_1" aria-label="Restaurante 1"></button>
+
+    <!-- Área de Descanso -->
+    <button class="dot" style="left: 72.07%; top: 63.87%;" data-id="area_descanso" aria-label="Área de Descanso"></button>
+
+    <!-- Lasai Stage -->
+    <button class="dot" style="left: 48.54%; top: 72.46%;" data-id="lasai_stage" aria-label="Lasai Stage"></button>
+
+    <!-- Zona seftanías -->
+    <button class="dot" style="left: 56.64%; top: 85.12%;" data-id="zona_seftanias" aria-label="Zona seftanías"></button>
+
+
+    <!-- ✅ APROXIMADOS (ajústalos con Modo colocar) -->
+
+    <!-- Pop Stage -->
+    <button class="dot" style="left: 12%; top: 32%;" data-id="pop_stage" aria-label="Pop Stage"></button>
+
+    <!-- Dance Stage -->
+    <button class="dot" style="left: 10%; top: 50%;" data-id="dance_stage" aria-label="Dance Stage"></button>
+
+    <!-- Victoria Stage -->
+    <button class="dot" style="left: 12%; top: 66%;" data-id="victoria_stage" aria-label="Victoria Stage"></button>
+
+    <!-- Bereziak Stage (dos rótulos) -->
+    <button class="dot" style="left: 76%; top: 41%;" data-id="bereziak_1" aria-label="Bereziak Stage 1"></button>
+    <button class="dot" style="left: 84%; top: 52%;" data-id="bereziak_2" aria-label="Bereziak Stage 2"></button>
+
+    <!-- Firestone -->
+    <button class="dot" style="left: 78%; top: 74%;" data-id="firestone" aria-label="Firestone"></button>
+
+    <!-- Exits (3) -->
+    <button class="dot" style="left: 86%; top: 22%;" data-id="exit_1" aria-label="Exit 1"></button>
+    <button class="dot" style="left: 90%; top: 36%;" data-id="exit_2" aria-label="Exit 2"></button>
+    <button class="dot" style="left: 86%; top: 44%;" data-id="exit_3" aria-label="Exit 3"></button>
+
+    <!-- WC (3) -->
+    <button class="dot" style="left: 29%; top: 48%;" data-id="wc_1" aria-label="WC 1"></button>
+    <button class="dot" style="left: 28%; top: 58%;" data-id="wc_2" aria-label="WC 2"></button>
+    <button class="dot" style="left: 21%; top: 86%;" data-id="wc_3" aria-label="WC 3"></button>
+
+    <!-- Restaurantes extra -->
+    <button class="dot" style="left: 86%; top: 57%;" data-id="restaurante_2" aria-label="Restaurante 2"></button>
+    <button class="dot" style="left: 83%; top: 88%;" data-id="restaurante_3" aria-label="Restaurante 3"></button>
+
+    <!-- ENTRADA inferior -->
+    <button class="dot" style="left: 16%; top: 79%;" data-id="entrada_2" aria-label="Entrada 2"></button>
+  </div>
+
+
+
+  <!-- MODAL -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <button class="btn" id="closeBtn" type="button">Cerrar</button>
+      </div>
+      <p id="modalBody"></p>
+      <div class="meta" id="modalMeta"></div>
+    </div>
+  </div>
+
+  <script>
+    const info = {
+  escenario_principal: {
+    title: "Escenario Principal",
+    icons: ["🎤", "🕒", "🗺️", "🚪", "⚠️"],
+    body: "Escenario principal. Aquí verás horarios, artista actual y el siguiente. También la ruta más rápida y la salida más cercana.",
+    quick: {
+      "🕒 Horarios": "18:00–02:30",
+      "🎶 Estilo": "Main / Hits / Headliners",
+      "🎤 Ahora": "Nova Pulse",
+      "⏭️ Siguiente": "Electric Harbor",
+      "🗺️ Ruta recomendada": "Por camino azul (menos gente)",
+      "🚪 Salidas cercanas": "EXIT 1 (arriba), EXIT 2 (media)",
+      "⚠️ Aviso": "Afluencia alta 22:30–00:30"
+    }
+  },
+
+  loop_stage: {
+    title: "Loop Stage",
+    icons: ["🎶", "🕒", "🌿", "👥", "🗺️"],
+    body: "Escenario rodeado de naturaleza. Verás horarios, estilo musical, afluencia y el mejor acceso.",
+    quick: {
+      "🕒 Horarios": "17:30–01:30",
+      "🎶 Estilo": "Indie / Alternativo",
+      "👥 Afluencia": "Media",
+      "🗺️ Acceso recomendado": "Desde Pop Stage por senda amarilla",
+      "ℹ️ Consejo": "Mejor zona para ver: lateral izquierdo"
+    }
+  },
+
+  basoa_stage: {
+    title: "Basoa Stage",
+    icons: ["🌲", "🕒", "⚠️", "🗺️", "🚻"],
+    body: "Zona boscosa con picos de público. Verás avisos de aforo y rutas alternativas para entrar o salir.",
+    quick: {
+      "🕒 Horarios": "18:30–03:00",
+      "🎶 Estilo": "Rock / Pop-Rock",
+      "⚠️ Aforo": "Subiendo (pico 23:00)",
+      "🗺️ Ruta alternativa": "Desvío por camino azul (evita zona saturada)",
+      "🚻 WC más cercano": "WC 1 (2 min)"
+    }
+  },
+
+  pop_stage: {
+    title: "Pop Stage",
+    icons: ["🎸", "🕒", "🍔", "🚻", "🗺️"],
+    body: "Conciertos pop/indie. Verás horarios, artistas y servicios cercanos (WC y comida).",
+    quick: {
+      "🕒 Horarios": "17:00–00:30",
+      "🎤 Artistas": "Kora / Sunwaves / The City Lines",
+      "🍔 Comida cerca": "Restaurante 1 (burger), Restaurante 2 (pizza)",
+      "🚻 WC cerca": "WC 1 (3 min)",
+      "🗺️ Ruta rápida": "Baja por senda azul desde Loop"
+    }
+  },
+
+  dance_stage: {
+    title: "Dance Stage",
+    icons: ["🎧", "🕒", "💧", "🚻", "⚠️"],
+    body: "Electrónica. Mucha gente de noche. Verás horarios, WC cerca y recomendaciones de hidratación.",
+    quick: {
+      "🕒 Horarios": "20:00–03:30",
+      "🎶 Estilo": "Techno / House",
+      "⚠️ Afluencia": "Alta 00:00–02:00",
+      "💧 Consejo": "Hidrátate cada 45 min",
+      "🚻 WC más cercano": "WC 1 (1–2 min)",
+      "🗺️ Salida recomendada": "EXIT 2 (si está muy lleno)"
+    }
+  },
+
+  victoria_stage: {
+    title: "Victoria Stage",
+    icons: ["✨", "🕒", "🧘", "🗺️", "🚻"],
+    body: "Escenario más tranquilo y accesible. Ideal para descansar sin salir del ambiente.",
+    quick: {
+      "🕒 Horarios": "16:30–23:30",
+      "🎶 Estilo": "Acústico / Chill",
+      "🧘 Ambiente": "Baja saturación",
+      "🗺️ Acceso": "Desde Entrada 2 por senda azul",
+      "🚻 WC cerca": "WC 2 (3–4 min)"
+    }
+  },
+
+  lasai_stage: {
+    title: "Lasai Stage",
+    icons: ["🌿", "🕒", "🧘", "👥", "🗺️"],
+    body: "Zona relajada. Aquí verás horarios y rutas tranquilas para moverte sin agobios.",
+    quick: {
+      "🕒 Horarios": "17:00–01:00",
+      "🎶 Estilo": "Ambient / Indie suave",
+      "👥 Afluencia": "Baja",
+      "🗺️ Ruta tranquila": "Camino amarillo por la parte baja",
+      "ℹ️ Consejo": "Buen sitio para esperar a tu grupo"
+    }
+  },
+
+  firestone: {
+    title: "Firestone",
+    icons: ["🔥", "🕒", "🎪", "🍟", "🗺️"],
+    body: "Zona de actividades especiales. Verás eventos, horarios y comida cercana.",
+    quick: {
+      "🕒 Horarios": "18:00–01:30",
+      "🎪 Actividades": "DJ set + show luces (21:30) / Sorteos (23:45)",
+      "🍟 Comida cerca": "Restaurante 3 (tacos) + snacks",
+      "🗺️ Ruta rápida": "Desde Área de Descanso (2 min)",
+      "ℹ️ Consejo": "Punto perfecto para “quedamos aquí”"
+    }
+  },
+
+  bereziak_1: {
+    title: "Bereziak Stage (Zona 1)",
+    icons: ["🎵", "🕒", "🗺️", "🚻", "👥"],
+    body: "Bereziak (ubicación 1). Verás horarios, accesos y servicios cerca.",
+    quick: {
+      "🕒 Horarios": "19:00–02:00",
+      "🎶 Estilo": "Urbano / Fusión",
+      "👥 Afluencia": "Media–Alta 22:00",
+      "🗺️ Acceso recomendado": "Por camino azul desde Principal",
+      "🚻 WC cerca": "WC 2 (4 min)"
+    }
+  },
+
+  bereziak_2: {
+    title: "Bereziak Stage (Zona 2)",
+    icons: ["🎵", "🕒", "⚠️", "🗺️", "🚪"],
+    body: "Bereziak (ubicación 2). Aquí verás rutas alternativas si hay aglomeración y salida cercana.",
+    quick: {
+      "🕒 Horarios": "20:00–03:00",
+      "🎶 Estilo": "Electro / Experimental",
+      "⚠️ Aviso": "Cuidado con embudo cerca del EXIT 3",
+      "🗺️ Ruta alternativa": "Rodeo por zona de restaurantes",
+      "🚪 Salida cercana": "EXIT 3 (derecha)"
+    }
+  },
+
+  zona_saturada: {
+    title: "Zona Saturada",
+    icons: ["⚠️", "👥", "🗺️", "🚑", "🚪"],
+    body: "Zona con mucha gente. El mapa recomienda rutas alternativas para evitar aglomeraciones.",
+    quick: {
+      "👥 Nivel": "Muy alto (pico 21:00–23:30)",
+      "🗺️ Ruta alternativa": "Borde inferior por camino azul",
+      "🚑 Seguridad": "Si te mareas, busca Área de Descanso",
+      "🚪 Salida recomendada": "EXIT 2 (media)"
+    }
+  },
+
+  area_descanso: {
+    title: "Área de Descanso",
+    icons: ["🧘", "🌿", "💧", "🗺️", "🧑‍🦽"],
+    body: "Zona para bajar estímulo, sentarse y recuperar. Recomendado si estás cansad@ o agobiad@.",
+    quick: {
+      "🧘 Qué hay": "Bancos / zona tranquila",
+      "💧 Recomendación": "Hidratación + pausa 10 min",
+      "🧑‍🦽 Accesible": "Sí",
+      "🗺️ Ruta rápida": "Desde Restaurante 2 (2 min)"
+    }
+  },
+
+  restaurante_1: {
+    title: "Restaurante (1)",
+    icons: ["🍔", "🥤", "🕒", "👥", "🧑‍🦽"],
+    body: "Comida y bebida. Verás el tipo de comida, horarios y nivel de cola.",
+    quick: {
+      "🍔 Tipo": "Hamburguesas",
+      "🥤 Bebidas": "Agua / refrescos",
+      "🕒 Horario": "12:00–02:30",
+      "👥 Cola": "Media (pico 20:30)",
+      "🧑‍🦽 Accesible": "Sí"
+    }
+  },
+
+  restaurante_2: {
+    title: "Restaurante (2)",
+    icons: ["🍕", "🥗", "🕒", "👥", "🗺️"],
+    body: "Comida y bebida. Ideal si estás cerca de Bereziak o descanso.",
+    quick: {
+      "🍕 Tipo": "Pizza",
+      "🥗 Opciones": "Vegetariana",
+      "🕒 Horario": "12:00–01:30",
+      "👥 Cola": "Baja–Media",
+      "🗺️ Alternativa": "Restaurante 1 si hay cola"
+    }
+  },
+
+  restaurante_3: {
+    title: "Restaurante (3)",
+    icons: ["🌮", "🍟", "🕒", "👥", "🗺️"],
+    body: "Comida en la zona baja. Perfecto si vienes de Lasai o Firestone.",
+    quick: {
+      "🌮 Tipo": "Tacos",
+      "🍟 Extras": "Snacks",
+      "🕒 Horario": "13:00–02:00",
+      "👥 Cola": "Media",
+      "🗺️ Ruta rápida": "Desde Firestone (1–2 min)"
+    }
+  },
+
+  entrada_1: {
+    title: "Entrada (1)",
+    icons: ["🚪", "🎟️", "🕒", "👥", "🗺️"],
+    body: "Acceso principal. Verás horario, recomendaciones para evitar colas y ruta a los escenarios.",
+    quick: {
+      "🕒 Horario": "16:00–03:00",
+      "🎟️ Control": "Pulsera + ticket",
+      "👥 Cola": "Media (pico 19:00)",
+      "🗺️ Ruta rápida": "A Dance/Pop por camino azul"
+    }
+  },
+
+  entrada_2: {
+    title: "Entrada (2)",
+    icons: ["🚪", "🎟️", "🕒", "👥", "🗺️"],
+    body: "Acceso alternativo. Recomendado si vienes a zona baja (Lasai/Firestone).",
+    quick: {
+      "🕒 Horario": "16:00–02:00",
+      "👥 Cola": "Baja",
+      "🗺️ Ruta rápida": "A Lasai por camino amarillo",
+      "ℹ️ Consejo": "Menos gente que la Entrada 1"
+    }
+  },
+
+  exit_1: {
+    title: "Salida (1)",
+    icons: ["🚪", "⬅️", "🗺️", "⚠️"],
+    body: "Salida superior. Útil si estás en escenario principal.",
+    quick: {
+      "🗺️ Ruta": "Desde Principal por camino azul",
+      "⚠️ Consejo": "Evita el centro en hora pico"
+    }
+  },
+  exit_2: {
+    title: "Salida (2)",
+    icons: ["🚪", "⬅️", "🗺️", "⚠️"],
+    body: "Salida media. Recomendable para descongestionar zona derecha.",
+    quick: {
+      "🗺️ Ruta": "Desde Bereziak 1 por borde derecho",
+      "⚠️ Consejo": "Úsala tras el concierto del Principal"
+    }
+  },
+  exit_3: {
+    title: "Salida (3)",
+    icons: ["🚪", "⬅️", "🗺️", "⚠️"],
+    body: "Salida inferior derecha. Buena opción desde Bereziak 2.",
+    quick: {
+      "🗺️ Ruta": "Desde Bereziak 2 (1–2 min)",
+      "⚠️ Consejo": "Atención a embudo si hay mucha gente"
+    }
+  },
+
+  wc_1: {
+    title: "WC (1)",
+    icons: ["🚻", "🧑‍🦽", "🧼", "🗺️"],
+    body: "Baños en zona media. El mapa te guía rápido hasta aquí.",
+    quick: {
+      "🧑‍🦽 Accesible": "Sí",
+      "🧼 Higiene": "Lavamanos",
+      "🗺️ Ruta": "Desde Dance Stage (1–2 min)"
+    }
+  },
+  wc_2: {
+    title: "WC (2)",
+    icons: ["🚻", "🧑‍🦽", "🧼", "🗺️"],
+    body: "Baños en zona central. Ruta corta desde Basoa y restaurantes.",
+    quick: {
+      "🧑‍🦽 Accesible": "Sí",
+      "🗺️ Ruta": "Desde Basoa Stage (2–3 min)"
+    }
+  },
+  wc_3: {
+    title: "WC (3)",
+    icons: ["🚻", "🧼", "🗺️"],
+    body: "Baños en zona inferior. Útiles si estás por Lasai/Entrada 2.",
+    quick: {
+      "🗺️ Ruta": "Desde Lasai Stage (2–3 min)",
+      "ℹ️ Consejo": "Menos cola a última hora"
+    }
+  },
+
+  zona_seftanias: {
+    title: "Zona seftanías",
+    icons: ["🏕️", "🕒", "ℹ️", "✅"],
+    body: "Zona específica del recinto. Aquí verás qué es, qué servicios ofrece, horarios y normas básicas.",
+    quick: {
+      "ℹ️ Qué es": "Punto de encuentro + actividades",
+      "🕒 Horario": "17:00–01:00",
+      "✅ Normas": "Respeta colas y mantén libre el paso",
+      "📍 Uso": "Quedadas del grupo y orientación"
+    }
+  }
+};
+
+    // Modal
+const modal = document.getElementById("modal");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const modalMeta = document.getElementById("modalMeta");
+const closeBtn = document.getElementById("closeBtn");
+
+document.querySelectorAll(".dot").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.id;
+
+    const data = info[id] || {
+      title: "Punto",
+      icons: ["ℹ️"],
+      body: "Añade información para este punto.",
+      quick: {}
+    };
+
+    // ✅ Título
+    modalTitle.textContent = data.title;
+
+    // ✅ Línea de pictogramas
+    const iconsLine =
+      Array.isArray(data.icons) && data.icons.length
+        ? data.icons.join(" ")
+        : "";
+
+    // ✅ Bloque de datos rápidos (key: value)
+    const quickLines =
+      data.quick && typeof data.quick === "object"
+        ? Object.entries(data.quick)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join("\n")
+        : "";
+
+    // ✅ Contenido final del modal (texto)
+    modalBody.textContent =
+      (iconsLine ? iconsLine + "\n\n" : "") +
+      (data.body ? data.body + "\n\n" : "") +
+      (quickLines ? quickLines : "");
+
+    modalMeta.textContent = `ID: ${id}`;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+  });
+});
+
+function closeModal() {
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+}
+closeBtn.addEventListener("click", closeModal);
+modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+// Modo colocar (sin alerts) + copiar coords
+const placeMode = document.getElementById("placeMode");
+const coordsPill = document.getElementById("coordsPill");
+const copyBtn = document.getElementById("copyBtn");
+const mapWrap = document.getElementById("mapWrap");
+const mapImg = document.getElementById("mapImg");
+let lastCoords = "";
+
+mapWrap.addEventListener("click", (e) => {
+  if (!placeMode.checked) return;
+  if (e.target.classList.contains("dot")) return;
+
+  const rect = mapImg.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const left = (x / rect.width) * 100;
+  const top = (y / rect.height) * 100;
+
+  lastCoords = `left: ${left.toFixed(2)}%; top: ${top.toFixed(2)}%;`;
+  coordsPill.textContent = lastCoords;
+});
+
+copyBtn.addEventListener("click", async () => {
+  if (!lastCoords) return;
+  try {
+    await navigator.clipboard.writeText(lastCoords);
+    coordsPill.textContent = lastCoords + " (copiado)";
+    setTimeout(() => coordsPill.textContent = lastCoords, 900);
+  } catch {
+    coordsPill.textContent = lastCoords + " (cópialo a mano)";
+  }
+});
+
+  </script>
+</body>
+</html>
